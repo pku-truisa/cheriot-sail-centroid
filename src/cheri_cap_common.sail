@@ -97,7 +97,7 @@ let  log2_revocation_granule_size = sizeof(log2_revocation_granule_size)
 
 /*! THIS represents capabilities as stored in memory. */
 struct EncCapability = {
-  reserved   : bits(1),
+  cmode      : bits(1),
   cperms     : bits(cap_cperms_width),
   cotype     : bits(cap_cotype_width),
   cE         : bits(cap_cE_width),
@@ -107,7 +107,7 @@ struct EncCapability = {
 }
 
 function capBitsToEncCapability(c) : CapBits -> EncCapability = struct {
-  reserved   = c[63..63],
+  cmode      = c[63..63],
   cperms     = c[62..57],
   cotype     = c[56..54],
   cE         = c[53..50],
@@ -117,7 +117,7 @@ function capBitsToEncCapability(c) : CapBits -> EncCapability = struct {
 }
 
 function encCapToBits(cap) : EncCapability -> CapBits =
-  cap.reserved @
+  cap.cmode @
   cap.cperms @
   cap.cotype @
   cap.cE @
@@ -164,7 +164,7 @@ struct Capability = {
   permit_store           : bool,
   permit_load_global     : bool,
   global                 : bool,
-  reserved               : bits(1),
+  cmode                  : bits(1),
   E                      : bits(cap_E_width),
   B                      : bits(cap_mantissa_width),
   T                      : bits(cap_mantissa_width),
@@ -187,7 +187,7 @@ let null_cap : Capability = struct {
   permit_store           = false,
   permit_load_global     = false,
   global                 = false,
-  reserved               = zeros(),
+  cmode                  = zeros(),
   B                      = zeros(),
   T                      = zeros(),
   E                      = zeros(),
@@ -318,7 +318,7 @@ function encCapabilityToCapability(t,c) : (bool, EncCapability) -> Capability = 
     permit_store           = permit_store          ,
     permit_load_global     = permit_load_global    ,
     global                 = global                ,
-    reserved               = c.reserved,
+    cmode                  = c.cmode,
     E                      = E,
     B                      = c.B,
     T                      = c.T,
@@ -378,7 +378,7 @@ function capToEncCap(cap) : Capability -> EncCapability = {
   };
   return struct {
     cperms = cperms,
-    reserved = cap.reserved,
+    cmode = cap.cmode,
     cotype = cap.otype[2..0], /* truncate otype when compressing */
     cE = if cap.E == cap_max_E_bits then 0xf else cap.E[3..0],
     T = cap.T,
