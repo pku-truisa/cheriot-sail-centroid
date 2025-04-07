@@ -248,8 +248,14 @@ function clause execute (CGetType(rd, cs1)) = {
  */
 function clause execute (CGetBase(rd, cs1)) = {
   let capVal = C(cs1);
-  X(rd) = getCapBaseBits(capVal);
-  RETIRE_SUCCESS
+
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    X(rd) = getCapBaseBits(capVal);
+    RETIRE_SUCCESS
+  }
 }
 
 /*!
@@ -302,9 +308,15 @@ function clause execute (CSetHigh(cd, cs1, rs2)) = {
  */
 function clause execute (CGetTop(rd, cs1)) = {
   let capVal = C(cs1);
-  let top = getCapTop(capVal);
-  X(rd) = to_bits(sizeof(xlen), if top > cap_max_addr then cap_max_addr else top);
-  RETIRE_SUCCESS
+
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let top = getCapTop(capVal);
+    X(rd) = to_bits(sizeof(xlen), if top > cap_max_addr then cap_max_addr else top);
+    RETIRE_SUCCESS
+  }
 }
 
 /*
@@ -323,9 +335,15 @@ function clause execute (CGetTop(rd, cs1)) = {
  */
 function clause execute (CGetLen(rd, cs1)) = {
   let capVal = C(cs1);
-  let len = getCapLength(capVal);
-  X(rd) = to_bits(sizeof(xlen), if len > cap_max_addr then cap_max_addr else len);
-  RETIRE_SUCCESS
+
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let len = getCapLength(capVal);
+    X(rd) = to_bits(sizeof(xlen), if len > cap_max_addr then cap_max_addr else len);
+    RETIRE_SUCCESS
+  }
 }
 
 /*!
@@ -374,6 +392,7 @@ union clause ast = CSpecialRW : (regidx, screg, regidx)
  */
 function clause execute (CSpecialRW(cd, scr, cs1)) = {
   let specialExists : bool = match unsigned(scr) {
+    27 => true,
     28 => true,
     29 => true,
     30 => true,
@@ -389,6 +408,7 @@ function clause execute (CSpecialRW(cd, scr, cs1)) = {
   } else {
     var cs1_val = C(cs1);
     C(cd) = match unsigned(scr) {
+      27 => MDDLBC,
       28 => MTCC,
       29 => MTDC,
       30 => MScratchC,
@@ -397,6 +417,7 @@ function clause execute (CSpecialRW(cd, scr, cs1)) = {
     };
     if (cs1 != zeros()) then {
       match unsigned(scr) {
+        27 => MDDLBC = cs1_val,
         28 => {
           /* Validate that the new MTCC is unsealed, executable and 
              indicates direct trap mode */
@@ -490,11 +511,16 @@ function clause execute (CIncAddr(cd, cs1, rs2)) = {
   let cs1_val = C(cs1);
   let rs2_val = X(rs2);
 
-  let inCap = clearTagIfSealed(cs1_val);
-  let (success, newCap) = incCapAddr(inCap, rs2_val);
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let inCap = clearTagIfSealed(cs1_val);
+    let (success, newCap) = incCapAddr(inCap, rs2_val);
 
-  C(cd) = clearTagIf(newCap, not(success));
-  RETIRE_SUCCESS
+    C(cd) = clearTagIf(newCap, not(success));
+    RETIRE_SUCCESS
+  }
 }
 
 union clause ast = CIncAddrImmediate : (regidx, regidx, bits(12))
@@ -510,11 +536,16 @@ function clause execute (CIncAddrImmediate(cd, cs1, imm)) = {
   let cs1_val = C(cs1);
   let immBits : xlenbits = sign_extend(imm);
 
-  let inCap = clearTagIfSealed(cs1_val);
-  let (success, newCap) = incCapAddr(inCap, immBits);
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let inCap = clearTagIfSealed(cs1_val);
+    let (success, newCap) = incCapAddr(inCap, immBits);
 
-  C(cd) = clearTagIf(newCap, not(success));
-  RETIRE_SUCCESS
+    C(cd) = clearTagIf(newCap, not(success));
+    RETIRE_SUCCESS
+  }
 }
 
 union clause ast = CSetAddr : (regidx, regidx, regidx)
@@ -531,10 +562,14 @@ function clause execute (CSetAddr(cd, cs1, rs2)) = {
   let rs2_val = X(rs2);
 
   let inCap = clearTagIfSealed(cs1_val);
-  let (representable, newCap) = setCapAddr(inCap, rs2_val);
-
-  C(cd) = clearTagIf(newCap, not(representable));
-  RETIRE_SUCCESS
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let (representable, newCap) = setCapAddr(inCap, rs2_val);
+    C(cd) = clearTagIf(newCap, not(representable));
+    RETIRE_SUCCESS
+  }
 }
 
 
@@ -565,15 +600,20 @@ function clause execute (CSetBounds(cd, cs1, rs2)) = {
   let cs1_val = C(cs1);
   let rs2_val = X(rs2);
 
-  let newBase = cs1_val.address;
-  let newLen  = rs2_val;
-  let inBounds = inCapBounds(cs1_val, newBase, unsigned(newLen));
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let newBase = cs1_val.address;
+    let newLen  = rs2_val;
+    let inBounds = inCapBounds(cs1_val, newBase, unsigned(newLen));
 
-  let inCap = clearTagIfSealed(cs1_val);
-  let (_, newCap) = setCapBounds(inCap, newBase, newLen);
+    let inCap = clearTagIfSealed(cs1_val);
+    let (_, newCap) = setCapBounds(inCap, newBase, newLen);
 
-  C(cd) = clearTagIf(newCap, not(inBounds)); /* ignore exact */
-  RETIRE_SUCCESS
+    C(cd) = clearTagIf(newCap, not(inBounds)); /* ignore exact */
+    RETIRE_SUCCESS
+  }
 }
 
 union clause ast = CSetBoundsImmediate : (regidx, regidx, bits(12))
@@ -593,15 +633,20 @@ union clause ast = CSetBoundsImmediate : (regidx, regidx, bits(12))
 function clause execute (CSetBoundsImmediate(cd, cs1, uimm)) = {
   let cs1_val = C(cs1);
 
-  let newBase = cs1_val.address;
-  let newLen : CapAddrBits = zero_extend(uimm);
-  let inBounds = inCapBounds(cs1_val, newBase, unsigned(newLen));
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let newBase = cs1_val.address;
+    let newLen : CapAddrBits = zero_extend(uimm);
+    let inBounds = inCapBounds(cs1_val, newBase, unsigned(newLen));
 
-  let inCap = clearTagIfSealed(cs1_val);
-  let (_, newCap) = setCapBounds(inCap, newBase, newLen);
+    let inCap = clearTagIfSealed(cs1_val);
+    let (_, newCap) = setCapBounds(inCap, newBase, newLen);
 
-  C(cd) = clearTagIf(newCap, not(inBounds)); /* ignore exact */
-  RETIRE_SUCCESS
+    C(cd) = clearTagIf(newCap, not(inBounds)); /* ignore exact */
+    RETIRE_SUCCESS
+  }
 }
 
 union clause ast = CSetBoundsExact : (regidx, regidx, regidx)
@@ -623,15 +668,20 @@ function clause execute (CSetBoundsExact(cd, cs1, rs2)) = {
   let cs1_val = C(cs1);
   let rs2_val = X(rs2);
 
-  let newBase = cs1_val.address;
-  let newLen = X(rs2);
-  let inBounds = inCapBounds(cs1_val, newBase, unsigned(newLen));
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let newBase = cs1_val.address;
+    let newLen = X(rs2);
+    let inBounds = inCapBounds(cs1_val, newBase, unsigned(newLen));
 
-  let inCap = clearTagIfSealed(cs1_val);
-  let (exact, newCap) = setCapBounds(inCap, newBase, newLen);
+    let inCap = clearTagIfSealed(cs1_val);
+    let (exact, newCap) = setCapBounds(inCap, newBase, newLen);
 
-  C(cd) = clearTagIf(newCap, not(inBounds & exact));
-  RETIRE_SUCCESS
+    C(cd) = clearTagIf(newCap, not(inBounds & exact));
+    RETIRE_SUCCESS
+  }
 }
 
 union clause ast = CSetBoundsRoundDown : (regidx, regidx, regidx)
@@ -663,11 +713,16 @@ function clause execute (CSetBoundsRoundDown(cd, cs1, rs2)) = {
 
   let newBase = cs1_val.address;
   let newLen = rs2_val;
-  let inBounds = inCapBounds(cs1_val, newBase, unsigned(newLen));
-  let inCap = clearTagIfSealed(cs1_val);
-  let newCap = setCapBoundsRoundDown(inCap, newBase, newLen);
-  C(cd) = clearTagIf(newCap, not(inBounds));
-  RETIRE_SUCCESS
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    let inBounds = inCapBounds(cs1_val, newBase, unsigned(newLen));
+    let inCap = clearTagIfSealed(cs1_val);
+    let newCap = setCapBoundsRoundDown(inCap, newBase, newLen);
+    C(cd) = clearTagIf(newCap, not(inBounds));
+    RETIRE_SUCCESS
+  }
 }
 
 union clause ast = CClearTag : (regidx, regidx)
@@ -861,6 +916,9 @@ function clause execute LoadCapImm(cd, cs1, imm) = {
   if not(auth_val.tag) then {
     handle_cheri_reg_exception(CapEx_TagViolation, cs1);
     RETIRE_FAIL
+  } else if not(hasValidDescriptor(auth_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
   } else if isCapSealed(auth_val) then {
     handle_cheri_reg_exception(CapEx_SealViolation, cs1);
     RETIRE_FAIL
@@ -955,6 +1013,9 @@ function clause execute StoreCapImm(cs2, cs1, imm) = {
   let cs2_val = C(cs2);
   if not(auth_val.tag) then {
     handle_cheri_reg_exception(CapEx_TagViolation, cs1);
+    RETIRE_FAIL
+  } else if not(hasValidDescriptor(auth_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else if isCapSealed(auth_val) then {
     handle_cheri_reg_exception(CapEx_SealViolation, cs1);

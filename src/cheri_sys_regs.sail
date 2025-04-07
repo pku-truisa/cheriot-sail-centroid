@@ -129,6 +129,7 @@ function clause ext_is_CSR_defined (0xBC2, Machine) = true // MSHWMB
 
 register PCC       : Capability
 register nextPCC   : Capability
+register MDDLBC    : Descriptor
 register MTCC      : Capability
 register MTDC      : Capability
 register MScratchC : Capability
