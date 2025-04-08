@@ -773,7 +773,7 @@ overload operator >>_s = {sail_arith_shiftright}
 //           false
 
 function setCapOffset(c, offset) : (Capability, CapAddrBits) -> (bool, Capability) =
-    let base = getCapBaseBits(c) in // 插入getDescrBaseBits(c)
+    let base = getCapBaseBits(c) in
     let newAddress = base + offset in
     let newCap     = { c with address = newAddress } in
     let representable = capBoundsEqual(c, newCap) in
@@ -793,7 +793,7 @@ val incCapAddr : (Capability, CapAddrBits) -> (bool, Capability)
 function incCapAddr(c, delta) =
     let newAddress : CapAddrBits = c.address + delta in
     let newCap     = { c with address = newAddress } in
-    let representable = capBoundsEqual(c, newCap) in //如果是Descriptor then representable = true;
+    let representable = capBoundsEqual(c, newCap) in
     /* let representable = fastRepCheck(c, delta) in */
     (representable, newCap)
 
