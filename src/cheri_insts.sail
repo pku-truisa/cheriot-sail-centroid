@@ -493,7 +493,7 @@ function clause execute (CIncAddr(cd, cs1, rs2)) = {
   let inCap = clearTagIfSealed(cs1_val);
   let (success, newCap) = incCapAddr(inCap, rs2_val);
 
-  C(cd) = clearTagIf(newCap, not(success));
+  C(cd) = clearTagIf(newCap, not(success | isDescrCapability(cs1_val)));
   RETIRE_SUCCESS
 }
 
@@ -513,7 +513,7 @@ function clause execute (CIncAddrImmediate(cd, cs1, imm)) = {
   let inCap = clearTagIfSealed(cs1_val);
   let (success, newCap) = incCapAddr(inCap, immBits);
 
-  C(cd) = clearTagIf(newCap, not(success));
+  C(cd) = clearTagIf(newCap, not(success | isDescrCapability(cs1_val)));
   RETIRE_SUCCESS
 }
 
@@ -533,7 +533,7 @@ function clause execute (CSetAddr(cd, cs1, rs2)) = {
   let inCap = clearTagIfSealed(cs1_val);
   let (representable, newCap) = setCapAddr(inCap, rs2_val);
 
-  C(cd) = clearTagIf(newCap, not(representable));
+  C(cd) = clearTagIf(newCap, not(representable | isDescrCapability(cs1_val)));
   RETIRE_SUCCESS
 }
 

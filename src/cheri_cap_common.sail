@@ -417,7 +417,12 @@ function getCapBoundsBits(c) : Capability -> (CapAddrBits, CapLenBits) = {
   /* Finally reconstruct the base and top using the corrections and truncate. */
   let base : CapAddrBits = truncate((a_top + c_b) @ c.B @ zeros(E), cap_addr_width);
   let top : CapLenBits  = truncate((a_top + c_t) @ c.T @ zeros(E), cap_len_width);
-  (base, top)
+  
+  let ( _, base_descr: CapAddrBits, top_descr: CapLenBits) = getDescrBoundsBits(c);
+  let base_mux : CapAddrBits = if isDescrCapability(c) then base_descr else base;
+  let top_mux : CapLenBits = if isDescrCapability(c) then top_descr else top;
+
+  (base_mux, top_mux)
 }
 // XXX Not sure whether we need something like this.
 // /* If the base and top are more than an address space away from each other,
@@ -768,7 +773,7 @@ overload operator >>_s = {sail_arith_shiftright}
 //           false
 
 function setCapOffset(c, offset) : (Capability, CapAddrBits) -> (bool, Capability) =
-    let base = getCapBaseBits(c) in
+    let base = getCapBaseBits(c) in // 插入getDescrBaseBits(c)
     let newAddress = base + offset in
     let newCap     = { c with address = newAddress } in
     let representable = capBoundsEqual(c, newCap) in
@@ -788,7 +793,7 @@ val incCapAddr : (Capability, CapAddrBits) -> (bool, Capability)
 function incCapAddr(c, delta) =
     let newAddress : CapAddrBits = c.address + delta in
     let newCap     = { c with address = newAddress } in
-    let representable = capBoundsEqual(c, newCap) in
+    let representable = capBoundsEqual(c, newCap) in //如果是Descriptor then representable = true;
     /* let representable = fastRepCheck(c, delta) in */
     (representable, newCap)
 
