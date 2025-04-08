@@ -79,6 +79,7 @@ mapping clause scr_name_map = 0b10101 <-> "stdc"
 mapping clause scr_name_map = 0b10110 <-> "sscratchc"
 mapping clause scr_name_map = 0b10111 <-> "sepcc"
 
+mapping clause scr_name_map = 0b11011 <-> "mddlbc"
 mapping clause scr_name_map = 0b11100 <-> "mtcc"
 mapping clause scr_name_map = 0b11101 <-> "mtdc"
 mapping clause scr_name_map = 0b11110 <-> "mscratchc"

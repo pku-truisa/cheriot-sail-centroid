@@ -248,8 +248,13 @@ function clause execute (CGetType(rd, cs1)) = {
  */
 function clause execute (CGetBase(rd, cs1)) = {
   let capVal = C(cs1);
-  X(rd) = getCapBaseBits(capVal);
-  RETIRE_SUCCESS
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {  
+    X(rd) = getCapBaseBits(capVal);
+    RETIRE_SUCCESS
+  }
 }
 
 /*!
@@ -302,9 +307,16 @@ function clause execute (CSetHigh(cd, cs1, rs2)) = {
  */
 function clause execute (CGetTop(rd, cs1)) = {
   let capVal = C(cs1);
-  let top = getCapTop(capVal);
-  X(rd) = to_bits(sizeof(xlen), if top > cap_max_addr then cap_max_addr else top);
-  RETIRE_SUCCESS
+
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  }
+  else {
+    let top = getCapTop(capVal);
+    X(rd) = to_bits(sizeof(xlen), if top > cap_max_addr then cap_max_addr else top);
+    RETIRE_SUCCESS
+  }
 }
 
 /*
@@ -323,9 +335,16 @@ function clause execute (CGetTop(rd, cs1)) = {
  */
 function clause execute (CGetLen(rd, cs1)) = {
   let capVal = C(cs1);
-  let len = getCapLength(capVal);
-  X(rd) = to_bits(sizeof(xlen), if len > cap_max_addr then cap_max_addr else len);
-  RETIRE_SUCCESS
+
+  if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  }
+  else {
+    let len = getCapLength(capVal);
+    X(rd) = to_bits(sizeof(xlen), if len > cap_max_addr then cap_max_addr else len);
+    RETIRE_SUCCESS
+  }
 }
 
 /*!
@@ -374,6 +393,7 @@ union clause ast = CSpecialRW : (regidx, screg, regidx)
  */
 function clause execute (CSpecialRW(cd, scr, cs1)) = {
   let specialExists : bool = match unsigned(scr) {
+    27 => true,
     28 => true,
     29 => true,
     30 => true,
@@ -389,6 +409,7 @@ function clause execute (CSpecialRW(cd, scr, cs1)) = {
   } else {
     var cs1_val = C(cs1);
     C(cd) = match unsigned(scr) {
+      27 => MDDLBC,
       28 => MTCC,
       29 => MTDC,
       30 => MScratchC,
@@ -397,6 +418,7 @@ function clause execute (CSpecialRW(cd, scr, cs1)) = {
     };
     if (cs1 != zeros()) then {
       match unsigned(scr) {
+        27 => MDDLBC = cs1_val,
         28 => {
           /* Validate that the new MTCC is unsealed, executable and 
              indicates direct trap mode */
@@ -861,6 +883,9 @@ function clause execute LoadCapImm(cd, cs1, imm) = {
   if not(auth_val.tag) then {
     handle_cheri_reg_exception(CapEx_TagViolation, cs1);
     RETIRE_FAIL
+  } else if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
   } else if isCapSealed(auth_val) then {
     handle_cheri_reg_exception(CapEx_SealViolation, cs1);
     RETIRE_FAIL
@@ -955,6 +980,9 @@ function clause execute StoreCapImm(cs2, cs1, imm) = {
   let cs2_val = C(cs2);
   if not(auth_val.tag) then {
     handle_cheri_reg_exception(CapEx_TagViolation, cs1);
+    RETIRE_FAIL
+  } else if not(hasValidDescriptor(cs1_val)) then {
+    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else if isCapSealed(auth_val) then {
     handle_cheri_reg_exception(CapEx_SealViolation, cs1);
