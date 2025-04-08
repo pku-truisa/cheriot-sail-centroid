@@ -148,3 +148,6 @@ function getDescrBounds(cap) : Capability -> (bool, CapAddrInt, CapLen) =
   let (descrmiss: bool, base : CapAddrBits, top : CapLenBits) = getDescrCapBoundsBits(cap) in
   (descrmiss, unsigned(base), unsigned(top))
 
+function hasValidDescriptor(cap) : Capability -> bool =
+  let (descrmiss: bool, _, _ ) = getDescrCapBoundsBits(cap) in
+  descrmiss
