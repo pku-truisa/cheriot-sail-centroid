@@ -14,8 +14,6 @@ Cheriot-centroid项目在Cheriot基础上加入基于Centroid的内存对象描�
 
 == RV32T/RV64T的标记指针
 
-RV32T/RV64T的大部分非特权功能、特权功能、指令编码等继承Cheriot的定义，但权能指针（Capability）采用标记指针（Tagged Pointer）形式，其指针位宽与RISC-V ABI兼容。
-
 Cheriot-centroid的主要增强功能：
 
 * 增加Centroid编码机制，可高效生成对象描述符的标识ID。
@@ -25,9 +23,11 @@ Cheriot-centroid的主要增强功能：
 * 增加描述符生成和DLB管理的三条指令
 * 增加DLB缺失的例外DLB Violation
 
+cheriot-centroid在PCC相关的定义、指令和功能上不做任何改变。
+
 TruISA定义了2种类型的标记指针：
 
-规整块标记指针（Block-Type, B-Type）：所有对象是2的幂次方大小和对齐。用户程序可以通过CSetBound和CSetBoundImm指令设定，需要符合单调性原则。
+规整块标记指针（Block-Type, B-Type）：所有对象是2的幂次方大小和对齐。用户程序可以通过CSetBound和CSetBoundImm指令设定，需要符合单调性原则。该类型标记指针与cheriot定义相同。
 
 描述符标记指针（Slot-Type, S-Type）：在对象描述符表中存在相对应的描述符表项，采用形心（Centroid）标记的哈希对象表。通过指针标记和线性地址由硬件计算形心标识。
 
