@@ -198,6 +198,8 @@ function ext_data_get_addr(base_reg : regidx, offset : xlenbits, acc : AccessTyp
 
   if not(auth_val.tag) then
     Ext_DataAddr_Error(CapEx_TagViolation, auth_idx)
+  esle if not(hasValidDescriptor(auth_val)) then
+    Ext_DataAddr_Error(CapEx_DescriptorViolation, auth_dix)
   else if isCapSealed(auth_val) then
     Ext_DataAddr_Error(CapEx_SealViolation, auth_idx)
   else if not(have_rqd_load_perm) then

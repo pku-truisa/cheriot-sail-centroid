@@ -135,7 +135,7 @@ function isDescrCapability(cap) : Capability -> bool = {
 /*!
  * Returns the decoded base and top in descriptor of the given Capability.
  */
-function getDescrBoundsBits(c) : Capability -> (bool, CapAddrBits, CapLenBits) = {
+function getDescrCapBoundsBits(c) : Capability -> (bool, CapAddrBits, CapLenBits) = {
   let E = unsigned(c.E);
   let a : CapAddrBits = c.address;
   let (descrmiss: bool, d : Descriptor) = getDescriptor(E, a);
@@ -145,6 +145,6 @@ function getDescrBoundsBits(c) : Capability -> (bool, CapAddrBits, CapLenBits) =
 }
 
 function getDescrBounds(cap) : Capability -> (bool, CapAddrInt, CapLen) =
-  let (descrmiss: bool, base : CapAddrBits, top : CapLenBits) = getCapBoundsBits(cap) in
+  let (descrmiss: bool, base : CapAddrBits, top : CapLenBits) = getDescrCapBoundsBits(cap) in
   (descrmiss, unsigned(base), unsigned(top))
 
