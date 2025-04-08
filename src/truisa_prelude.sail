@@ -13,38 +13,22 @@
 
 /* TRUISA specific helpers */
 
-val MEMr_tag = "read_tag_bool"  : bits(64) -> bool
-val MEMw_tag = "write_tag_bool" : (bits(64) , bool) -> unit
-
-val MAX : forall 'n, 'n >= 0 . atom('n) -> atom(2 ^ 'n - 1)
-function MAX(n) = pow2(n) - 1
-
-/*!
- * align_down(n, bv) returns the given bit vector, bv,  aligned down to a power
- * of two by clearing the least significant n bits.
- */
-val align_down : forall 'n 'm, 'n >= 1 & 'm > 'n . (int('n), bits('m)) -> bits('m)
-function align_down(n, bv) = [bv with ('n - 1) .. 0 = zeros()]
-
 let DLBNumEntries = 8
 type DLBIndexT = (bits(3))
 let DLBIndexMax : DLBIndexT = 0b111
 
-bitfield DLBEntry : bits(57) = {
-  radix    : 59..55,
-  perms_w  : 54,
-  bound    : 53..29,
-  flags_l  : 28,
-  flags_g  : 27,
-  perms_x  : 26,
-  perms_r  : 25,
-  base     : 24..0,
+struct DLBEntry = {
+cmode      : bits(1),
+cperms     : bits(cap_cperms_width),
+cotype     : bits(cap_cotype_width),
+reserved1  : bits(1),
+E          : bits(cap_E_width),
+base       : bits(24),
+bound      : bits(24)
 }
 
 register DLBIndex : DLBIndexT
 register DLBFIFO : DLBIndexT
-register CSR_DLBEntryBase : DLBEntryBase
-register CSR_DLBEntryBound : DLBEntryBound
 
 reigster DLBEntry00 ： DLBEntry
 reigster DLBEntry01 ： DLBEntry
