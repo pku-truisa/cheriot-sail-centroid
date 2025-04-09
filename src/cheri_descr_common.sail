@@ -151,3 +151,10 @@ function getDescrBounds(cap) : Capability -> (bool, CapAddrInt, CapLen) =
 function hasValidDescriptor(cap) : Capability -> bool =
   let (descrmiss: bool, _, _ ) = getDescrCapBoundsBits(cap) in
   descrmiss
+
+function getCentroid(cap) : DescrCapbility -> (xlenbits) = {
+  let E = cap.E;
+  let a : CapAddrBits = c.address;
+  let centroid : xlenbits = ((a >> E) << E ) | ( 1 << (E-1) )
+  cetorid
+}

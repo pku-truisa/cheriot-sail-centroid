@@ -717,9 +717,15 @@ function clearTag(cap) : Capability -> Capability =
     clearTagIf(cap, true)
 
 function capBoundsEqual (c1, c2) : (Capability, Capability) -> bool =
-    let (base1, top1) = getCapBounds(c1) in
-    let (base2, top2) = getCapBounds(c2) in
-    (base1 == base2) & (top1 == top2)
+    if isDescrCapability(c1) then {
+      let (base1, top1) = getCapBounds(c1) in
+      let (base2, top2) = getCapBounds(c2) in
+      (base1 == base2) & (top1 == top2)
+    } else {
+      let centroid1 = getCentroid(c1) in
+      let centroid2 = getCentroid(c2) in
+      (centroid1 == centroid2)
+    }
 
 /*!
  * Returns the given capability with the address set to the given value and a boolean
