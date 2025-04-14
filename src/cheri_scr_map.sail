@@ -79,6 +79,7 @@ mapping clause scr_name_map = 0b10101 <-> "stdc"
 mapping clause scr_name_map = 0b10110 <-> "sscratchc"
 mapping clause scr_name_map = 0b10111 <-> "sepcc"
 
+mapping clause scr_name_map = 0b11010 <-> "mdescrc"
 mapping clause scr_name_map = 0b11011 <-> "mddlbc"
 mapping clause scr_name_map = 0b11100 <-> "mtcc"
 mapping clause scr_name_map = 0b11101 <-> "mtdc"
@@ -103,8 +104,6 @@ mapping clause scr_name_map = 0b10010 <-> "0x12"
 mapping clause scr_name_map = 0b10011 <-> "0x13"
 mapping clause scr_name_map = 0b11000 <-> "0x18"
 mapping clause scr_name_map = 0b11001 <-> "0x19"
-mapping clause scr_name_map = 0b11010 <-> "0x1A"
-mapping clause scr_name_map = 0b11011 <-> "0x1B"
 
 val scr_name : screg -> string
 overload to_str = {scr_name}

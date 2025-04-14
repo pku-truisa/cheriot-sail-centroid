@@ -391,6 +391,7 @@ union clause ast = CSpecialRW : (regidx, screg, regidx)
  */
 function clause execute (CSpecialRW(cd, scr, cs1)) = {
   let specialExists : bool = match unsigned(scr) {
+    26 => true,
     27 => true,
     28 => true,
     29 => true,
@@ -407,6 +408,7 @@ function clause execute (CSpecialRW(cd, scr, cs1)) = {
   } else {
     var cs1_val = C(cs1);
     C(cd) = match unsigned(scr) {
+      26 => MDESCRC,
       27 => MDDLBC,
       28 => MTCC,
       29 => MTDC,
@@ -416,6 +418,7 @@ function clause execute (CSpecialRW(cd, scr, cs1)) = {
     };
     if (cs1 != zeros()) then {
       match unsigned(scr) {
+        26 => MDESCRC = cs1_val,
         27 => MDDLBC = cs1_val,
         28 => {
           /* Validate that the new MTCC is unsealed, executable and 
