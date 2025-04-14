@@ -57,6 +57,6 @@ function write_DLB(idx : bits(3), ent : DLBEntry) -> unit =
 
 val make_DLB_Entry : (bits(1), bits(25), bits(25)) -> DLBEntry
 function make_DLB_Entry(w_flag, base, bound) = {
-  let radix = 25 - Countleadings(base ^ bound);
+  let radix = : range(0, 23) = 23 - count_leading_zeros(to_bits(base ^ bound), 24);;
   (0b0, radix, w_flag, base, bound)
 }

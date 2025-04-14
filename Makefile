@@ -21,6 +21,8 @@ SAIL_VLEN = $(SAIL_RISCV_MODEL_DIR)/riscv_vlen.sail
 # Instruction sources, depending on target
 SAIL_CHECK_SRCS = $(SAIL_RISCV_MODEL_DIR)/riscv_addr_checks_common.sail \
                   $(SAIL_CHERI_MODEL_DIR)/cheri_addr_checks.sail \
+				  $(SAIL_CHERI_MODEL_DIR)/truisa_dte.sail \
+				  $(SAIL_CHERI_MODEL_DIR)/truisa_dlb.sail \
                   $(SAIL_CHERI_MODEL_DIR)/cheri_misa_ext.sail
 
 SAIL_DEFAULT_INST = $(SAIL_RISCV_MODEL_DIR)/riscv_insts_base.sail \
@@ -31,6 +33,7 @@ SAIL_DEFAULT_INST = $(SAIL_RISCV_MODEL_DIR)/riscv_insts_base.sail \
                     $(SAIL_CHERI_MODEL_DIR)/cheri_insts_begin.sail \
                     $(SAIL_CHERI_MODEL_DIR)/cheri_insts.sail \
                     $(SAIL_CHERI_MODEL_DIR)/cheri_insts_cext.sail \
+					$(SAIL_CHERI_MODEL_DIR)/truisa_insts.sail \
                     $(SAIL_CHERI_MODEL_DIR)/cheri_insts_end.sail
 # $(SAIL_FD_INST) \
 # $(SAIL_RISCV_MODEL_DIR)/riscv_insts_aext.sail
@@ -70,6 +73,7 @@ PRELUDE = $(SAIL_RISCV_MODEL_DIR)/prelude.sail \
           $(SAIL_CHERI_MODEL_DIR)/cheri_prelude.sail \
           $(SAIL_CHERI_MODEL_DIR)/cheri_types.sail \
           $(SAIL_CHERI_MODEL_DIR)/cheri_cap_common.sail \
+		  $(SAIL_CHERI_MODEL_DIR)/cheri_descr_common.sail \
           $(SAIL_CHERI_MODEL_DIR)/cheri_mem_metadata.sail \
           $(SAIL_RISCV_MODEL_DIR)/prelude_mem.sail
 
