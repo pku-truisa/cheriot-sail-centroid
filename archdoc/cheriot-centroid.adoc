@@ -95,13 +95,14 @@ SCR寄存器MDDLBC
 [float="center",align="center",cols="<10%,<10%,<20%,<60%",options="header"]
 |===
 |Number |Privilege |Name |Description
-4+^|Machine Data DLB SCR
+4+^|Machine Data Descriptor SCR
 
-|27 |MRW |MDDLBC | Machine Data Descriptor Lookaside Buffer Capbility. 
+|26 |MRW |MDESCRC | Machine Descriptor Capability Register, 通用描述符寄存器1
+|27 |MRW |MDDLBC  | Machine Data Descriptor Lookaside Buffer Capbility，通用描述符寄存器2
 
 |===
 
-这个SCR寄存器，也是DLB的一部分，具备边检检查功能。
+这两个SCR寄存器，也是DLB的一部分，具备边检检查功能。
 
 参见，cheriot手册第57页表7.2
 
