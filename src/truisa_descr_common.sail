@@ -1,3 +1,9 @@
+type descr_addr_width : Int = cap_max_E
+let  descr_addr_width = sizeof(descr_addr_width)
+
+type DescrAddrBits  = bits(descr_addr_width)
+type DescrAddrInt   = range(0, (2 ^ descr_addr_width) - 1)
+
 /*! THIS represents descriptor as stored in memory. */
 struct Descriptor = {
   cmode      : bits(1),
@@ -5,8 +11,8 @@ struct Descriptor = {
   cotype     : bits(cap_cotype_width),
   reserved1  : bits(1),
   E          : bits(cap_E_width),
-  base       : bits(24),
-  bound      : bits(24)
+  base       : bits(descr_addr_width),
+  bound      : bits(descr_addr_width)
 }
 
 /*! THIS represents descriptor-mode capabilities as stored in memory. */
@@ -103,8 +109,6 @@ function descrCapabilityToCapability(t,c) : (bool, DescrCapability) -> Capabilit
   /* The otype of executable caps is mapped to 1-7 and others to 9-15. Unsealed
     is always 0. */
   let otype = (if isExe | c.cotype == 0b000 then 0b0 else 0b1) @ c.cotype;
-  /* The 4-bit exponent is expanded to 5 bits, using 0xf to encode a cap_max_E
-    value that enables representing the entire address space. */
   return struct {
     tag                    = t,
     perm_user0             = perm_user0            ,
@@ -132,6 +136,48 @@ function isDescrCapability(cap) : Capability -> bool = {
   bit_to_bool(c.mode)
 }
 
+function calcDescrE(base, bound) : DescrAddrBits, DescrAddrBits -> bits(cap_E_width) = {
+  let E : range(0, 24) = 24 - count_leading_zeros( base ^ bound );
+  to_bits(cap_E_width, E)
+}
+
+fucntion calCentroid(e, a) : (bits(cap_E_width), CapAddrBits) -> CapAddrBits = {
+  let mask : CapAddrBits = tobits((0b1 << e) - 1);
+  let centroid : CapAddrBits = ( a & mask ) | ( 1 << (e-1) );
+  centroid
+}
+
+function calcCapCentroid(cap) : DescrCapbility -> xlenbits = {
+  let e = cap.E;
+  let a : CapAddrBits = cap.address;
+  calCentroid(e, a)
+}
+
+function calcDescrCentroid(descr) : Descriptor -> xlenbits = {
+  let a : CapAddrBits = descr.base;
+  let e = calcDescrE(descr.base, descr.bound);
+  calCentroid(e, a)
+}
+
+val getDescriptor(e, a) : (bits(cap_E_width), CapAddrBits) -> (bool, Descriptor)
+function getDescriptor(input_desc) = {
+  let desc_mddlbc = MDDLBC;
+  let desc_mdescrc = MDESCRC;
+
+  let match_mddlbc = 
+    calcCentroid(e, a) == calcDescrCentroid(descr_mddlbc);
+
+  let match_mdescrc = 
+    calcCentroid(e, a) == calcDescrCentroid(decrc_mdescrc);
+
+  if match_mddlbc then
+    (true, desc_mddlbc)       // 返回MDDLBC寄存器中的描述符
+  else if match_mdescrc then
+    (true, desc_mdescrc)      // 返回MDESCRC寄存器中的描述符
+  else
+    (false, zeros())       // 无匹配时返回NULL描述符
+}
+
 /*!
  * Returns the decoded base and top in descriptor of the given Capability.
  */
@@ -151,10 +197,3 @@ function getDescrBounds(cap) : Capability -> (bool, CapAddrInt, CapLen) =
 function hasValidDescriptor(cap) : Capability -> bool =
   let (descrmiss: bool, _, _ ) = getDescrCapBoundsBits(cap) in
   descrmiss
-
-function getCentroid(cap) : DescrCapbility -> (xlenbits) = {
-  let E = cap.E;
-  let a : CapAddrBits = c.address;
-  let centroid : xlenbits = ((a >> E) << E ) | ( 1 << (E-1) )
-  cetorid
-}
