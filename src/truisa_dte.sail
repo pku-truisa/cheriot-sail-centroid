@@ -1,14 +1,16 @@
 /*=======================================================================================*/
 /*  TRUISA RISCV Sail Model                                                              */
 /*                                                                                       */
-/*  This TRUISA Sail RISC-V architecture model here, comprising all files and            */
-/*  directories except for the snapshots of the Lem and Sail libraries in the            */
-/*  prover_snapshots directory (which include copies of their licenses), is subject      */
-/*  to the BSD two-clause licence below.                                                 */
+/*  This Sail TRUISA RISC-V architecture model, comprising all files and                 */
+/*  directories except where otherwise noted is subject the BSD                          */
+/*  two-clause license in the LICENSE file.                                              */
+/*                                                                                       */
+/*  SPDX-License-Identifier: BSD-2-Clause                                                */
 /*                                                                                       */
 /*  Copyright (c) 2019-2025                                                              */
 /*    Dong Tong, Peking University                                                       */
 /*                                                                                       */
+/*  All rights reserved.                                                                 */
 /*=======================================================================================*/
 
 /* TRUISA specific helpers */
