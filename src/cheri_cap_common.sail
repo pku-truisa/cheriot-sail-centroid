@@ -60,118 +60,6 @@
 /*  SUCH DAMAGE.                                                                         */
 /*=======================================================================================*/
 
-/* width of capability in bytes (excluding tag) */
-type cap_size : Int = 8
-let  cap_size = sizeof(cap_size)
-type log2_cap_size : Int = 3
-let  log2_cap_size = sizeof(log2_cap_size)
-type CapBits = bits(8 * cap_size)
-/*! Width of compressed perms field in bits */
-type cap_cperms_width : Int = 6
-
-/*! Width of architectural otype field in bits */
-type cap_otype_width : Int = 4
-let  cap_otype_width = sizeof(cap_otype_width)
-/*! Width of compressed otype field in bits */
-type cap_cotype_width : Int = 3
-/*! Width of T and B field in bits */
-type cap_mantissa_width : Int = 9
-let  cap_mantissa_width = sizeof(cap_mantissa_width)
-/*! Width of expanded exponent field in bits */
-type cap_E_width : Int = 5
-let  cap_E_width = sizeof(cap_E_width)
-/*! Width of compressed exponent field in bits */
-type cap_cE_width : Int = 4
-type cap_addr_width : Int = xlen
-let  cap_addr_width = sizeof(cap_addr_width)
-/*! Cap length width is one larger than address space width in order to 
- represent maximum top / length of 2**xlen. */
-type cap_len_width : Int = cap_addr_width + 1
-let  cap_len_width = sizeof(cap_len_width)
-
-/*!
- * There is one revocation bit for every 8 bytes.
- */
-type log2_revocation_granule_size : Int = 3
-let  log2_revocation_granule_size = sizeof(log2_revocation_granule_size)
-
-/*! THIS represents capabilities as stored in memory. */
-struct EncCapability = {
-  cmode      : bits(1),
-  cperms     : bits(cap_cperms_width),
-  cotype     : bits(cap_cotype_width),
-  cE         : bits(cap_cE_width),
-  T          : bits(cap_mantissa_width),
-  B          : bits(cap_mantissa_width),
-  address    : bits(cap_addr_width)
-}
-
-function capBitsToEncCapability(c) : CapBits -> EncCapability = struct {
-  cmode      = c[63..63],
-  cperms     = c[62..57],
-  cotype     = c[56..54],
-  cE         = c[53..50],
-  T          = c[49..41],
-  B          = c[40..32],
-  address    = c[31..0]
-}
-
-function encCapToBits(cap) : EncCapability -> CapBits =
-  cap.cmode @
-  cap.cperms @
-  cap.cotype @
-  cap.cE @
-  cap.T @
-  cap.B @
-  cap.address
-
-let cap_max_addr = MAX(cap_addr_width)
-let cap_max_otype = MAX(cap_otype_width)
-
-/*! Width of the architectural perms returned by CGetPerms. */
-type cap_perms_width : Int = 12
-let  cap_perms_width = sizeof(cap_perms_width)
-
-type CapAddrBits  = bits(cap_addr_width)
-type CapAddrInt   = range(0, (2 ^ cap_addr_width) - 1)
-type CapLenBits   = bits(cap_len_width)
-type CapLen       = range(0, (2 ^ cap_len_width) - 1)
-type CapPermsBits = bits(cap_perms_width)
-
-/*! Exponent chosen to permit representing the entire address space. */
-type cap_max_E : Int = 24
-let cap_max_E = sizeof(cap_max_E)
-let cap_max_E_bits = to_bits(cap_E_width, sizeof(cap_max_E))
-/* Value for T field that represents max value of top (2**32) when used with cap_max_E. */
-let cap_reset_T = 0b1 @ zeros(cap_mantissa_width - 1)
-
-/*!
- * THIS represents a partially decompressed capability. The
- * permissions, E and otype are expanded from their compressed format by
- * [encCapabilityToCapability] and compressed by [capToEncCap].
- */
-struct Capability = {
-  tag                    : bool,
-  perm_user0             : bool,
-  permit_seal            : bool,
-  permit_unseal          : bool,
-  permit_execute         : bool,
-  access_system_regs     : bool,
-  permit_load_store_cap  : bool,
-  permit_load            : bool,
-  permit_store_local_cap : bool,
-  permit_load_mutable    : bool,
-  permit_store           : bool,
-  permit_load_global     : bool,
-  global                 : bool,
-  cmode                  : bits(1),
-  E                      : bits(cap_E_width),
-  B                      : bits(cap_mantissa_width),
-  T                      : bits(cap_mantissa_width),
-  otype                  : bits(cap_otype_width),
-  address                : bits(cap_addr_width)
-}
-
 /* The null capability is defined as all zeros, with tag unset. */
 let null_cap : Capability = struct {
   tag                    = false,
@@ -418,7 +306,7 @@ function getCapBoundsBits(c) : Capability -> (CapAddrBits, CapLenBits) = {
   let base : CapAddrBits = truncate((a_top + c_b) @ c.B @ zeros(E), cap_addr_width);
   let top : CapLenBits  = truncate((a_top + c_t) @ c.T @ zeros(E), cap_len_width);
   
-  let ( _, base_descr: CapAddrBits, top_descr: CapLenBits) = getDescrBoundsBits(c);
+  let ( _, base_descr: CapAddrBits, top_descr: CapLenBits) = getDescrCapBoundsBits(c);
   let base_mux : CapAddrBits = if isDescrCapability(c) then base_descr else base;
   let top_mux : CapLenBits = if isDescrCapability(c) then top_descr else top;
 
@@ -722,8 +610,8 @@ function capBoundsEqual (c1, c2) : (Capability, Capability) -> bool =
       let (base2, top2) = getCapBounds(c2) in
       (base1 == base2) & (top1 == top2)
     } else {
-      let centroid1 = getCentroid(c1) in
-      let centroid2 = getCentroid(c2) in
+      let centroid1 = calcCapCentroid(c1) in
+      let centroid2 = calcCapCentroid(c2) in
       (centroid1 == centroid2)
     }
 

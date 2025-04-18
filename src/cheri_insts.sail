@@ -248,8 +248,8 @@ function clause execute (CGetType(rd, cs1)) = {
  */
 function clause execute (CGetBase(rd, cs1)) = {
   let capVal = C(cs1);
-  if not(hasValidDescriptor(cs1_val)) then {
-    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+  if not(hasValidDescriptor(capVal)) then {
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else {  
     X(rd) = getCapBaseBits(capVal);
@@ -308,8 +308,8 @@ function clause execute (CSetHigh(cd, cs1, rs2)) = {
 function clause execute (CGetTop(rd, cs1)) = {
   let capVal = C(cs1);
 
-  if not(hasValidDescriptor(cs1_val)) then {
-    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+  if not(hasValidDescriptor(capVal)) then {
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else {
     let top = getCapTop(capVal);
@@ -335,8 +335,8 @@ function clause execute (CGetTop(rd, cs1)) = {
 function clause execute (CGetLen(rd, cs1)) = {
   let capVal = C(cs1);
 
-  if not(hasValidDescriptor(cs1_val)) then {
-    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+  if not(hasValidDescriptor(capVal)) then {
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else {
     let len = getCapLength(capVal);
@@ -514,7 +514,7 @@ function clause execute (CIncAddr(cd, cs1, rs2)) = {
   let rs2_val = X(rs2);
 
   if not(hasValidDescriptor(cs1_val)) then {
-    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else {
     let inCap = clearTagIfSealed(cs1_val);
@@ -539,7 +539,7 @@ function clause execute (CIncAddrImmediate(cd, cs1, imm)) = {
   let immBits : xlenbits = sign_extend(imm);
 
   if not(hasValidDescriptor(cs1_val)) then {
-    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else {
     let inCap = clearTagIfSealed(cs1_val);
@@ -564,7 +564,7 @@ function clause execute (CSetAddr(cd, cs1, rs2)) = {
   let rs2_val = X(rs2);
 
   if not(hasValidDescriptor(cs1_val)) then {
-    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else {
     let inCap = clearTagIfSealed(cs1_val);
@@ -899,8 +899,8 @@ function clause execute LoadCapImm(cd, cs1, imm) = {
   if not(auth_val.tag) then {
     handle_cheri_reg_exception(CapEx_TagViolation, cs1);
     RETIRE_FAIL
-  } else if not(hasValidDescriptor(cs1_val)) then {
-    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+  } else if not(hasValidDescriptor(auth_val)) then {
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else if isCapSealed(auth_val) then {
     handle_cheri_reg_exception(CapEx_SealViolation, cs1);
@@ -997,8 +997,8 @@ function clause execute StoreCapImm(cs2, cs1, imm) = {
   if not(auth_val.tag) then {
     handle_cheri_reg_exception(CapEx_TagViolation, cs1);
     RETIRE_FAIL
-  } else if not(hasValidDescriptor(cs1_val)) then {
-    handle_cheri_cap_exception(CapEx_DescriptorViolation, cs1);
+  } else if not(hasValidDescriptor(auth_val)) then {
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
     RETIRE_FAIL
   } else if isCapSealed(auth_val) then {
     handle_cheri_reg_exception(CapEx_SealViolation, cs1);
