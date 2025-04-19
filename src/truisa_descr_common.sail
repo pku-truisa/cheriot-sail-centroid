@@ -28,7 +28,7 @@ type DescrAddrInt   = range(0, (2 ^ descr_addr_width) - 1)
 //  E          : bits(cap_E_width),
 //  base       : bits(descr_addr_width),
 //  bound      : bits(descr_addr_width)
-}
+//}
 
 struct Descriptor = {
   tag                    : bool,
@@ -52,9 +52,9 @@ struct Descriptor = {
 }
 
 function capToDescriptor(cap) : Capability -> Descriptor = {
-  let temp : bits(40) = cap.T @ cap.B @ cap.address;
+  let temp : bits(50) = cap.T @ cap.B @ cap.address;
   return struct {
-    tag                    = cap.t,
+    tag                    = cap.tag,
     perm_user0             = cap.perm_user0            ,
     permit_seal            = cap.permit_seal           ,
     permit_unseal          = cap.permit_unseal         ,
@@ -70,8 +70,8 @@ function capToDescriptor(cap) : Capability -> Descriptor = {
     cmode                  = cap.cmode,
     otype                  = cap.otype,
     E                      = cap.E,
-    base                   = temp[47:24],
-    bound                  = temp[23:0]
+    base                   = temp[47..24],
+    bound                  = temp[23..0]
   }
 }
 
@@ -91,13 +91,24 @@ register MDDLBC    : Capability
 
 /* The null descriptor is defined as all zeros. */
 let null_descr : Descriptor = struct {
-  cmode      = zeros(),
-  cperms     = zeros(),
-  cotype     = zeros(),
-  reserved1  = zeros(),
-  E          = zeros(),
-  base       = zeros(),
-  bound      = zeros()
+  tag                    = false,
+  perm_user0             = false,
+  permit_seal            = false,
+  permit_unseal          = false,
+  permit_execute         = false,
+  access_system_regs     = false,
+  permit_load_store_cap  = false,
+  permit_load            = false,
+  permit_store_local_cap = false,
+  permit_load_mutable    = false,
+  permit_store           = false,
+  permit_load_global     = false,
+  global                 = false,
+  cmode                  = zeros(),
+  E                      = zeros(),
+  otype                  = to_bits(cap_otype_width, otype_unsealed),
+  base                   = zeros(),
+  bound                  = zeros()
 }
 
 function capBitsToEncDescrCapability(c) : CapBits -> EncDescrCapability = struct {
@@ -237,7 +248,7 @@ function calcDescrCentroid(descr) : Descriptor -> CapAddrBits = {
 
 function getDescriptor(expon, addr) : (bits(cap_E_width), CapAddrBits) -> (bool, Descriptor) = {
   let descr_mddlbc: Descriptor = capToDescriptor(MDDLBC);
-  let descr_mdescrc : Descriptor = capToDescritpor(MDESCRC);
+  let descr_mdescrc : Descriptor = capToDescriptor(MDESCRC);
 
   if calcCentroid(expon, addr) == calcDescrCentroid(descr_mddlbc) then
     (true, descr_mddlbc)       // 返回MDDLBC寄存器中的描述符

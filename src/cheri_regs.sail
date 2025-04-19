@@ -128,8 +128,8 @@ function ext_init_regs () = {
   PCC = root_cap_exe;
   nextPCC = root_cap_exe;
 
-  MDESCRC = null_descr;
-  MDDLBC = null_descr;
+  MDESCRC = null_cap;
+  MDDLBC = null_cap;
   MTCC = root_cap_exe;
   MTDC = root_cap_mem;
   MScratchC = root_cap_seal;
