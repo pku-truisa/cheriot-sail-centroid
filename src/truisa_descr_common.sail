@@ -19,16 +19,30 @@ let  descr_addr_width = sizeof(descr_addr_width)
 type DescrAddrBits  = bits(descr_addr_width)
 type DescrAddrInt   = range(0, (2 ^ descr_addr_width) - 1)
 
+/*! THIS represents descriptor-mode capabilities as stored in memory. */
+struct EncDescrCapability = {
+  cmode      : bits(1), /* 0, EncCapability; 1, EncDescrCapability */
+  cperms     : bits(cap_cperms_width),
+  cotype     : bits(cap_cotype_width),
+  dmode      : bits(1), /* 0, EnDescrCapability; 1, EncDescriptor */
+  E          : bits(cap_E_width),
+  reserved16 : bits(16),
+  address    : bits(cap_addr_width)
+}
+
 /*! THIS represents descriptor as stored in memory. */
-// struct Descriptor = {
-//  cmode      : bits(1),
-//  cperms     : bits(cap_cperms_width),
-//  cotype     : bits(cap_cotype_width),
-//  reserved1  : bits(1),
-//  E          : bits(cap_E_width),
-//  base       : bits(descr_addr_width),
-//  bound      : bits(descr_addr_width)
-//}
+struct EncDescriptor = {
+  cmode      : bits(1), /* 0, EncCapability; 1, EncDescrCapability */
+  cperms     : bits(cap_cperms_width),
+  cotype     : bits(cap_cotype_width),
+  dmode      : bits(1), /* 0, EnDescrCapability; 1, EncDescriptor */
+  E          : bits(cap_E_width),
+  base       : bits(descr_addr_width),
+  bound      : bits(descr_addr_width)
+}
+
+register MDESCRC   : Capability
+register MDDLBC    : Capability
 
 struct Descriptor = {
   tag                    : bool,
@@ -45,10 +59,11 @@ struct Descriptor = {
   permit_load_global     : bool,
   global                 : bool,
   cmode                  : bits(1),
+  dmode                  : bits(1),
   otype                  : bits(cap_otype_width),
   E                      : bits(cap_E_width),
   base                   : bits(descr_addr_width),
-  bound                  : bits(descr_addr_width),
+  bound                  : bits(descr_addr_width)
 }
 
 function capToDescriptor(cap) : Capability -> Descriptor = {
@@ -68,26 +83,13 @@ function capToDescriptor(cap) : Capability -> Descriptor = {
     permit_load_global     = cap.permit_load_global    ,
     global                 = cap.global                ,
     cmode                  = cap.cmode,
+    dmode                  = cap.dmode,
     otype                  = cap.otype,
     E                      = cap.E,
     base                   = temp[47..24],
     bound                  = temp[23..0]
   }
 }
-
-/*! THIS represents descriptor-mode capabilities as stored in memory. */
-struct EncDescrCapability = {
-  cmode      : bits(1),
-  cperms     : bits(cap_cperms_width),
-  cotype     : bits(cap_cotype_width),
-  reserved1  : bits(1),
-  E          : bits(cap_E_width),
-  reserved16 : bits(16),
-  address    : bits(cap_addr_width)
-}
-
-register MDESCRC   : Capability
-register MDDLBC    : Capability
 
 /* The null descriptor is defined as all zeros. */
 let null_descr : Descriptor = struct {
@@ -105,6 +107,7 @@ let null_descr : Descriptor = struct {
   permit_load_global     = false,
   global                 = false,
   cmode                  = zeros(),
+  dmode                  = ones(),
   E                      = zeros(),
   otype                  = to_bits(cap_otype_width, otype_unsealed),
   base                   = zeros(),
@@ -115,7 +118,7 @@ function capBitsToEncDescrCapability(c) : CapBits -> EncDescrCapability = struct
   cmode      = c[63..63],
   cperms     = c[62..57],
   cotype     = c[56..54],
-  reserved1  = c[53..53],
+  dmode      = c[53..53],
   E          = c[52..48],
   reserved16 = c[47..32],
   address    = c[31..0]
@@ -125,7 +128,7 @@ function encDescrCapToBits(cap) : EncDescrCapability -> CapBits =
   cap.cmode @
   cap.cperms @
   cap.cotype @
-  cap.reserved1 @
+  cap.dmode @
   cap.E @
   cap.reserved16 @
   cap.address
@@ -209,6 +212,7 @@ function encDescrCapabilityToCapability(t,c) : (bool, EncDescrCapability) -> Cap
     permit_load_global     = permit_load_global    ,
     global                 = global                ,
     cmode                  = c.cmode,
+    dmode                  = zeros(),
     E                      = c.E,
     B                      = zeros(),
     T                      = zeros(),

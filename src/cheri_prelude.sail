@@ -112,7 +112,7 @@ let  log2_revocation_granule_size = sizeof(log2_revocation_granule_size)
 
 /*! THIS represents capabilities as stored in memory. */
 struct EncCapability = {
-  cmode      : bits(1),
+  cmode      : bits(1), /* 0, EncCapability; 1, EncDescrCapability */
   cperms     : bits(cap_cperms_width),
   cotype     : bits(cap_cotype_width),
   cE         : bits(cap_cE_width),
@@ -180,6 +180,7 @@ struct Capability = {
   permit_load_global     : bool,
   global                 : bool,
   cmode                  : bits(1),
+  dmode                  : bits(1),
   E                      : bits(cap_E_width),
   B                      : bits(cap_mantissa_width),
   T                      : bits(cap_mantissa_width),
