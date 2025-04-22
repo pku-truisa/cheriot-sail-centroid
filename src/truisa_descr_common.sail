@@ -222,7 +222,11 @@ function encDescrCapabilityToCapability(t,c) : (bool, EncDescrCapability) -> Cap
 }
 
 function isDescrCapability(cap) : Capability -> bool = {
-  bit_to_bool(cap.cmode[0])
+  bit_to_bool(cap.cmode[0] & ~cap.dmode[0])
+}
+
+function isDescriptor(cap) : Capability -> bool = {
+  bit_to_bool(cap.cmode[0] & cap.dmode[0])
 }
 
 function calcDescrE(base, bound) : (DescrAddrBits, DescrAddrBits) -> bits(cap_E_width) = {
@@ -279,3 +283,20 @@ function getDescrBounds(cap) : Capability -> (bool, CapAddrInt, CapLen) =
 function hasValidDescriptor(cap) : Capability -> bool =
   let (descrmiss: bool, _, _ ) = getDescrCapBoundsBits(cap) in
   descrmiss
+
+function buildDescriptor(cap, len) : (Capability, CapLenBits) -> Descritpor = {
+  let newDescr = capToDescriptor(cap);
+  let (base, top) = getCapBounds(cap);
+  if cap.address + len < top then {
+    let newE = calcDescrE(cap.address) in
+    let descr = newDescr with {
+      E = newE;
+      bound = truncate(cap.address + len, 24)
+    } 
+  } else {
+      let descr = newDescr with {
+        bound = zeros() /* invalid descritpor
+      }
+  }
+  descr
+}

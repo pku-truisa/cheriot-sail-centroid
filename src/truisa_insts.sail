@@ -20,18 +20,18 @@
 /* ****************************************************************** */
 union clause ast = TFENCE_VMA : (regidx, regidx)
 
-mapping clause encdec = TFENCE_VMA(rs1, rs2)
-  <-> 0b0001001 @ rs2 @ cs1 @ 0b000 @ 0b00000 @ 0b0001111
+mapping clause encdec = TFENCE_VMA(cs1)
+  <-> 0b0001001 @ 0b00000 @ cs1 @ 0b000 @ 0b00000 @ 0b0001111
 
-function clause execute TFENCE_VMA(rs1, rs2) = {
-  let addr : option(xlenbits) = if rs1 == 0b00000 then None() else Some(X(rs1));
-  let asid : option(xlenbits) = if rs2 == 0b00000 then None() else Some(X(rs2));
-  flush_DLB(asid, addr); 
+function clause execute TFENCE_VMA(cs1) = {
+  let cs1_val = C(cs1);
+  let full: bits(1) = if cs1 == 0b00000 then 0b1 else 0b0;
+  flush_DLB(full, cs1_val.E, cs1_val.address); 
   RETIRE_SUCCESS
 }
 
-mapping clause assembly = TFENCE_VMA(rs1, rs2)
-  <-> "tfence.vma" ^ spc() ^ reg_name(rs1) ^ sep() ^ reg_name(rs2)
+mapping clause assembly = TFENCE_VMA(cs1)
+  <-> "tfence.vma" ^ spc() ^ reg_name(cs1)
 
 /* ****************************************************************** */
 union clause ast = TDLBRW : unit
@@ -48,15 +48,21 @@ function clause assembly (TDLBINSERT()) = "tdlbrw"
 /* ****************************************************************** */
 union clause ast = TSETDESCRIPTOR : (regidx, regidx, regidx)
 
-mapping clause encdec = TSETDESCRIPTOR(cd, rs1, rs2)
+mapping clause encdec = TSETDESCRIPTOR(cd, cs1, rs2)
   <-> 0b0000100 @ rs2 @ rs1 @ 0b011 @ cd @ 0b0001111
 
 function clause execute (TSETDESCRIPTOR(cd, rs1, rs2)) = {
-  let base : option(xlenbits) = Some(X(rs1));
-  let bound : option(xlenbits) = Some(X(rs2));
-  C(cd) = SetDescriptor(base, bound);
-  RETIRE_SUCCESS
+  let cs1_val = C(cs1);
+  let len : option(xlenbits) = Some(X(rs2));
+
+  if not(hasValidDescriptor(capVal)) then {
+    handle_cheri_reg_exception(CapEx_DescriptorViolation, cs1);
+    RETIRE_FAIL
+  } else {
+    C(cd) = buildDescriptor(cs1_val, 0b0 @ len); /* return Capability with tag clear if BuildDescriptor cause Error
+    RETIRE_SUCCESS
+  }
 }
 
 mapping clause assembly = TSETDESCRIPTOR(cd, rs1, rs2)
-  <-> "tsetdescr" ^ spc() ^ cap_reg_name(cd) ^ sep() ^ reg_name(rs1) ^ sep() ^ reg_name(rs2)
+  <-> "tsetdescr" ^ spc() ^ cap_reg_name(cd) ^ sep() ^ reg_name(cs1) ^ sep() ^ reg_name(rs2)

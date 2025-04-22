@@ -15,33 +15,26 @@
 
 /* TRUISA specific helpers */
 
-let DLBNumEntries = 8
-type DLBIndexT = (bits(3))
-let DLBIndexMax : DLBIndexT = 0b111
+let DLB_num_entries = 8
+type DLB_index_width = 3
+let DLB_index_width = sizeof(DLB_index_width)
+let DLBIndexMax : DLB_index_width = 0b111
 
-struct DLBEntry = {
-cmode      : bits(1),
-cperms     : bits(cap_cperms_width),
-cotype     : bits(cap_cotype_width),
-reserved1  : bits(1),
-E          : bits(cap_E_width),
-base       : bits(24),
-bound      : bits(24)
-}
+type DLBIndexT = bits(DLB_index_width)
 
 register DLBIndex : DLBIndexT
 register DLBFIFO : DLBIndexT
 
-reigster DLBEntry00 ： DLBEntry
-reigster DLBEntry01 ： DLBEntry
-reigster DLBEntry02 ： DLBEntry
-reigster DLBEntry03 ： DLBEntry
-reigster DLBEntry04 ： DLBEntry
-reigster DLBEntry05 ： DLBEntry
-reigster DLBEntry06 ： DLBEntry
-reigster DLBEntry07 ： DLBEntry
+reigster DLBEntry00 ：Descriptor
+reigster DLBEntry01 ：Descriptor
+reigster DLBEntry02 ：Descriptor
+reigster DLBEntry03 ：Descriptor
+reigster DLBEntry04 ：Descriptor
+reigster DLBEntry05 ：Descriptor
+reigster DLBEntry06 ：Descriptor
+reigster DLBEntry07 ：Descriptor
 
-let DLBEntries : vector(DLBNumEntries, dec, register(DLBEntry)) = {
+let DLBEntries : vector(DLBNumEntries, dec, register(Descriptor)) = {
     ref DLBEntry07,
     ref DLBEntry06,
     ref DLBEntry05,
