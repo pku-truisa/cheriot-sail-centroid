@@ -17,6 +17,25 @@
  *  Descritptor Lookaside Buffer instruction
  */
 
+
+function buildDescriptor(cap, len) : (Capability, CapLenBits) -> Descriptor = {
+  let newDescr = capToDescriptor(cap);
+  let (base, top) = getCapBounds(cap);
+  if cap.address + len < top then {
+    let newE = calcDescrE(cap.address) in
+    descr =  {
+      newDescr with
+      E = newE,
+      bound = truncate(cap.address + len, 24)
+    } 
+  } else {
+    descr = {
+    newDescr with 
+    bound = zeros() /* invalid descritpor */
+    }
+  }
+}
+
 /* ****************************************************************** */
 union clause ast = TFENCE_VMA : (regidx, regidx)
 

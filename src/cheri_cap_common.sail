@@ -314,6 +314,7 @@ function getCapBoundsBits(c) : Capability -> (CapAddrBits, CapLenBits) = {
 
   (base_mux, top_mux)
 }
+
 // XXX Not sure whether we need something like this.
 // /* If the base and top are more than an address space away from each other,
 //    invert the MSB of top.  This corrects for errors that happen when the
