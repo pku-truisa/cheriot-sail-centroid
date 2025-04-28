@@ -608,7 +608,7 @@ function clearTag(cap) : Capability -> Capability =
     clearTagIf(cap, true)
 
 function capBoundsEqual (c1, c2) : (Capability, Capability) -> bool =
-    if isDescrCapability(c1) then {
+    if not(isDescrCapability(c1)) then {
       let (base1, top1) = getCapBounds(c1) in
       let (base2, top2) = getCapBounds(c2) in
       (base1 == base2) & (top1 == top2)
